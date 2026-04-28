@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>5 Phaser Scenes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
+<script>
+
+// ═══════════════════════════════════════════════════════
+//  SCENE 1 — TITLE SCREEN (Starfield)
+// ═══════════════════════════════════════════════════════
+class TitleScene extends Phaser.Scene {
+  constructor() { super({ key: 'TitleScene' }); }
+
+  create() {
+    const W = 800, H = 500;
+
+    // Background
+    const bg = this.add.graphics();
+    const grad = this.add.graphics();
+    bg.fillStyle(0x000010);
+    bg.fillRect(0, 0, W, H);
+
+    // Stars
+    for (let i = 0; i < 200; i++) {
+      const x = Phaser.Math.Between(0, W);
+      const y = Phaser.Math.Between(0, H);
+      const r = Math.random();
+      const star = this.add.circle(x, y, 0.5 + Math.random() * 1.5, 0xffffff, 0.3 + r * 0.7);
+      // Twinkle
+      this.tweens.add({
+        targets: star,
+        alpha: { from: 0.2, to: 1 },
+        duration: 800 + Math.random() * 2000,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2000
+      });
+    }
+
+    // Shooting star
+    const shoot = this.add.line(0, 0, 0, 0, 80, 0, 0xffffff, 0.8);
+    shoot.setPosition(100, 100);
+    this.tweens.add({
+      targets: shoot,
+      x: W + 100, y: H,
+      alpha: { from: 1, to: 0 },
+      duration: 1800,
+      repeat: -1,
+      delay: 2000
+    });
+
+    // Title text
+    const title = this.add.text(W / 2, 160, '✦ FIVE WORLDS ✦', {
+      fontSize: '52px',
+      fontFamily: 'Georgia, serif',
+      fill: '#ffffff',
+      stroke: '#8844ff',
+      strokeThickness: 6
+    }).setOrigin(0.5).setAlpha(0);
+
+    this.tweens.add({
+      targets: title,
+      alpha: 1,
+      duration: 1200,
+      ease: 'Power2'
+    });
+
+    // Subtitle
+    this.add.text(W / 2, 240, 'A journey through five worlds', {
+      fontSize: '20px',
+      fontFamily: 'Georgia, serif',
+      fill: '#aaaaff'
+    }).setOrigin(0.5);
+
+    // Scene labels
+    const scenes = ['🌟 Title', '🌲 Forest', '🌊 Ocean', '🚀 Space', '🏙️ City'];
+    scenes.forEach((s, i) => {
+      this.add.text(W / 2, 290 + i * 28, s, {
+        fontSize: '16px',
+        fontFamily: 'Courier New',
+        fill: i === 0 ? '#ffdd00' : '#666688'
+      }).setOrigin(0.5);
+    });
+
+    // Prompt
+    const prompt = this.add.text(W / 2, 460, 'PRESS SPACE TO BEGIN', {
+      fontSize: '18px',
+      fontFamily: 'Courier New',
+      fill: '#ffffff'
+    }).setOrigin(0.5);
+    this.tweens.add({
+      targets: prompt,
+      alpha: { from: 1, to: 0.2 },
+      duration: 700,
+      yoyo: true,
+      repeat: -1
+    });
+
+    // Scene number
+    this.add.text(10, 10, 'SCENE 1 / 5', {
+      fontSize: '13px', fontFamily: 'Courier New', fill: '#555577'
+    });
+
+    // Spacebar transition
+    this.input.keyboard.once('keydown-SPACE', () => {
+      this.cameras.main.fade(600, 0, 0, 0);
+      this.time.delayedCall(600, () => this.scene.start('ForestScene'));
+    });
+
+    // Fade in
+    this.cameras.main.fadeIn(800, 0, 0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE 2 — FOREST
+// ═══════════════════════════════════════════════════════
+class ForestScene extends Phaser.Scene {
+  constructor() { super({ key: 'ForestScene' }); }
+
+  create() {
+    const W = 800, H = 500;
+
+    // Sky gradient
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0x87ceeb, 0x87ceeb, 0x228b22, 0x228b22, 1);
+    sky.fillRect(0, 0, W, H);
+
+    // Sun
+    const sun = this.add.circle(680, 80, 55, 0xffee00, 1);
+    // Sun glow
+    this.add.circle(680, 80, 75, 0xffee00, 0.2);
+    this.add.circle(680, 80, 95, 0xffee00, 0.1);
+    this.tweens.add({
+      targets: sun,
+      y: 70,
+      duration: 3000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // Clouds
+    const drawCloud = (x, y, scale) => {
+      const g = this.add.graphics();
+      g.fillStyle(0xffffff, 0.9);
+      g.fillCircle(0, 0, 30 * scale);
+      g.fillCircle(30 * scale, -10 * scale, 40 * scale);
+      g.fillCircle(70 * scale, 0, 30 * scale);
+      g.fillRect(-30 * scale, 0, 130 * scale, 30 * scale);
+      g.setPosition(x, y);
+      this.tweens.add({
+        targets: g,
+        x: x + 40,
+        duration: 6000 + Math.random() * 4000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    };
+    drawCloud(100, 60, 0.8);
+    drawCloud(400, 40, 1);
+    drawCloud(580, 90, 0.6);
+
+    // Ground
+    const ground = this.add.graphics();
+    ground.fillStyle(0x3a7d44);
+    ground.fillRect(0, 360, W, 140);
+    ground.fillStyle(0x2d5a27);
+    ground.fillRect(0, 390, W, 110);
+
+    // Draw tree function
+    const drawTree = (x, h, trunkW, color) => {
+      const trunk = this.add.graphics();
+      trunk.fillStyle(0x4a2c0a);
+      trunk.fillRect(x - trunkW / 2, 360 - h * 0.4, trunkW, h * 0.4);
+
+      const leaves = this.add.graphics();
+      leaves.fillStyle(color, 1);
+      // Triangle layers
+      leaves.fillTriangle(x, 360 - h, x - h * 0.45, 360 - h * 0.5, x + h * 0.45, 360 - h * 0.5);
+      leaves.fillTriangle(x, 360 - h * 0.75, x - h * 0.55, 360 - h * 0.3, x + h * 0.55, 360 - h * 0.3);
+      leaves.fillTriangle(x, 360 - h * 0.5, x - h * 0.65, 360 - h * 0.1, x + h * 0.65, 360 - h * 0.1);
+
+      // Sway
+      this.tweens.add({
+        targets: [trunk, leaves],
+        angle: { from: -2, to: 2 },
+        duration: 2000 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    };
+
+    drawTree(80,  180, 18, 0x2d7a2d);
+    drawTree(200, 220, 22, 0x1a6b1a);
+    drawTree(330, 160, 16, 0x3a8c3a);
+    drawTree(490, 200, 20, 0x256025);
+    drawTree(620, 190, 19, 0x2d7a2d);
+    drawTree(740, 170, 17, 0x1a6b1a);
+
+    // Birds
+    for (let i = 0; i < 5; i++) {
+      const bx = Phaser.Math.Between(100, 700);
+      const by = Phaser.Math.Between(60, 180);
+      const bird = this.add.graphics();
+      bird.lineStyle(2, 0x222222, 1);
+      bird.beginPath();
+      bird.moveTo(0, 0);
+      bird.quadraticBezierTo(5, -4, 10, 0);
+      bird.strokePath();
+      bird.setPosition(bx, by);
+      this.tweens.add({
+        targets: bird,
+        x: bx + 300,
+        y: by - 30,
+        duration: 4000 + i * 500,
+        repeat: -1,
+        delay: i * 600
+      });
+    }
+
+    // Title
+    this.add.text(W / 2, 30, '🌲 THE ENCHANTED FOREST', {
+      fontSize: '26px', fontFamily: 'Georgia, serif',
+      fill: '#1a3d0a', stroke: '#7ec850', strokeThickness: 3
+    }).setOrigin(0.5);
+
+    this.add.text(W / 2, 420, 'Birds sing, trees sway in the gentle breeze...', {
+      fontSize: '16px', fontFamily: 'Georgia, serif', fill: '#e8ffe8'
+    }).setOrigin(0.5);
+
+    const prompt = this.add.text(W / 2, 460, 'PRESS SPACE FOR NEXT SCENE', {
+      fontSize: '15px', fontFamily: 'Courier New', fill: '#ffffff'
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.2 }, duration: 700, yoyo: true, repeat: -1 });
+
+    this.add.text(10, 10, 'SCENE 2 / 5', { fontSize: '13px', fontFamily: 'Courier New', fill: '#1a3d0a' });
+
+    this.input.keyboard.once('keydown-SPACE', () => {
+      this.cameras.main.fade(600, 0, 0, 0);
+      this.time.delayedCall(600, () => this.scene.start('OceanScene'));
+    });
+    this.cameras.main.fadeIn(800, 0, 0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE 3 — OCEAN
+// ═══════════════════════════════════════════════════════
+class OceanScene extends Phaser.Scene {
+  constructor() { super({ key: 'OceanScene' }); }
+
+  create() {
+    const W = 800, H = 500;
+
+    // Sky
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0xffe0a0, 0xff8c42, 0xff6b35, 0xc44dff, 1);
+    sky.fillRect(0, 0, W, H * 0.5);
+
+    // Sun / horizon glow
+    const sunGlow = this.add.graphics();
+    sunGlow.fillStyle(0xffdd00, 0.3);
+    sunGlow.fillCircle(W / 2, H * 0.5, 120);
+    sunGlow.fillStyle(0xffaa00, 0.5);
+    sunGlow.fillCircle(W / 2, H * 0.5, 70);
+    sunGlow.fillStyle(0xffee88, 1);
+    sunGlow.fillCircle(W / 2, H * 0.5, 35);
+
+    // Ocean
+    const ocean = this.add.graphics();
+    ocean.fillGradientStyle(0x006994, 0x006994, 0x003366, 0x001133, 1);
+    ocean.fillRect(0, H * 0.5, W, H * 0.5);
+
+    // Reflection
+    const reflection = this.add.graphics();
+    reflection.fillStyle(0xffaa00, 0.15);
+    reflection.fillRect(W / 2 - 20, H * 0.5, 40, H * 0.5);
+    reflection.fillStyle(0xffaa00, 0.08);
+    reflection.fillRect(W / 2 - 60, H * 0.5, 120, H * 0.5);
+
+    // Animated waves
+    const waveGraphics = [];
+    for (let w = 0; w < 4; w++) {
+      const wg = this.add.graphics();
+      waveGraphics.push({ g: wg, offset: w * 80, speed: 0.015 + w * 0.005, amp: 8 - w });
+    }
+
+    // Clouds
+    const drawSunsetCloud = (x, y) => {
+      const g = this.add.graphics();
+      g.fillStyle(0xff9966, 0.7);
+      g.fillEllipse(0, 0, 120, 35);
+      g.fillStyle(0xff6633, 0.5);
+      g.fillEllipse(20, -10, 80, 30);
+      g.setPosition(x, y);
+      this.tweens.add({ targets: g, x: x + 50, duration: 8000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    };
+    drawSunsetCloud(80, 80);
+    drawSunsetCloud(550, 60);
+    drawSunsetCloud(300, 110);
+
+    // Seagulls
+    for (let i = 0; i < 6; i++) {
+      const bx = Phaser.Math.Between(50, 750);
+      const by = Phaser.Math.Between(80, 200);
+      const g = this.add.graphics();
+      g.lineStyle(2, 0x222222, 0.8);
+      g.beginPath(); g.moveTo(0,0); g.quadraticBezierTo(5,-4,10,0); g.strokePath();
+      g.setPosition(bx, by);
+      this.tweens.add({ targets: g, x: bx + 200, y: by - 20, duration: 5000 + i * 300, repeat: -1, delay: i * 400 });
+    }
+
+    // Boat
+    const boat = this.add.graphics();
+    boat.fillStyle(0x8b4513, 1);
+    boat.fillTriangle(-30, 0, 30, 0, 20, 15);
+    boat.fillRect(-30, -2, 60, 6);
+    // Mast
+    boat.lineStyle(3, 0x5a2d0c, 1);
+    boat.beginPath(); boat.moveTo(0, -2); boat.lineTo(0, -50); boat.strokePath();
+    // Sail
+    boat.fillStyle(0xfff5e0, 0.9);
+    boat.fillTriangle(0, -48, 0, -5, 35, -20);
+    boat.setPosition(650, H * 0.5 - 8);
+    this.tweens.add({
+      targets: boat,
+      x: -80,
+      duration: 18000,
+      repeat: -1
+    });
+    this.tweens.add({
+      targets: boat,
+      y: H * 0.5 - 8 + 5,
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // Wave animation
+    let t = 0;
+    this.events.on('update', () => {
+      t += 0.05;
+      waveGraphics.forEach(({ g, offset, speed, amp }, idx) => {
+        g.clear();
+        const alpha = 0.3 + idx * 0.1;
+        const colors = [0x0099cc, 0x0077aa, 0x005588, 0x003366];
+        g.fillStyle(colors[idx], alpha);
+        g.beginPath();
+        g.moveTo(0, H);
+        for (let x = 0; x <= W; x += 8) {
+          const y = H * 0.5 + offset + Math.sin(x * 0.015 + t + idx) * amp + Math.cos(x * 0.008 + t * 0.7) * (amp * 0.5);
+          if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.lineTo(W, H);
+        g.lineTo(0, H);
+        g.closePath();
+        g.fillPath();
+      });
+    });
+
+    // Title
+    this.add.text(W / 2, 30, '🌊 SUNSET OCEAN', {
+      fontSize: '28px', fontFamily: 'Georgia, serif',
+      fill: '#fff0cc', stroke: '#cc4400', strokeThickness: 3
+    }).setOrigin(0.5);
+
+    this.add.text(W / 2, 460, 'Waves roll in as the sun kisses the horizon...', {
+      fontSize: '15px', fontFamily: 'Georgia, serif', fill: '#ffe0cc'
+    }).setOrigin(0.5);
+
+    const prompt = this.add.text(W / 2, 480, 'PRESS SPACE FOR NEXT SCENE', {
+      fontSize: '14px', fontFamily: 'Courier New', fill: '#ffffff'
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.2 }, duration: 700, yoyo: true, repeat: -1 });
+
+    this.add.text(10, 10, 'SCENE 3 / 5', { fontSize: '13px', fontFamily: 'Courier New', fill: '#fff0cc' });
+
+    this.input.keyboard.once('keydown-SPACE', () => {
+      this.cameras.main.fade(600, 0, 0, 0);
+      this.time.delayedCall(600, () => this.scene.start('SpaceScene'));
+    });
+    this.cameras.main.fadeIn(800, 0, 0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE 4 — SPACE
+// ═══════════════════════════════════════════════════════
+class SpaceScene extends Phaser.Scene {
+  constructor() { super({ key: 'SpaceScene' }); }
+
+  create() {
+    const W = 800, H = 500;
+
+    // Deep space bg
+    this.add.graphics().fillStyle(0x000005).fillRect(0, 0, W, H);
+
+    // Nebula blobs
+    const nebula = this.add.graphics();
+    [[200, 200, 0x4400aa, 0.08], [500, 150, 0x002299, 0.07], [350, 350, 0x880044, 0.06]].forEach(([x, y, c, a]) => {
+      nebula.fillStyle(c, a);
+      nebula.fillCircle(x, y, 180);
+    });
+
+    // Stars (parallax layers)
+    for (let i = 0; i < 300; i++) {
+      const layer = Math.floor(Math.random() * 3);
+      const speeds = [0.2, 0.5, 1.0];
+      const sizes = [0.5, 1, 1.5];
+      const s = this.add.circle(
+        Phaser.Math.Between(0, W),
+        Phaser.Math.Between(0, H),
+        sizes[layer], 0xffffff, 0.3 + Math.random() * 0.7
+      );
+      this.tweens.add({
+        targets: s,
+        x: '-=' + (speeds[layer] * 300),
+        duration: 8000 + layer * 2000,
+        repeat: -1,
+        onRepeat: () => { s.x = W + 10; s.y = Phaser.Math.Between(0, H); }
+      });
+    }
+
+    // Planet 1 — large purple
+    const p1 = this.add.graphics();
+    p1.fillStyle(0x9933cc, 1);
+    p1.fillCircle(0, 0, 80);
+    p1.fillStyle(0x7711aa, 0.7);
+    p1.fillEllipse(0, 20, 170, 25);
+    // rings
+    p1.lineStyle(6, 0xcc77ff, 0.5);
+    p1.strokeEllipse(0, 0, 220, 40);
+    p1.setPosition(650, 160);
+    this.tweens.add({ targets: p1, y: 150, duration: 5000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+    // Planet 2 — small blue
+    const p2 = this.add.graphics();
+    p2.fillStyle(0x2244cc, 1);
+    p2.fillCircle(0, 0, 35);
+    p2.fillStyle(0x1133aa, 0.6);
+    p2.fillCircle(10, -10, 20);
+    p2.setPosition(150, 350);
+    this.tweens.add({ targets: p2, y: 340, duration: 3500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+    // Rocket
+    const rocket = this.add.graphics();
+    // Body
+    rocket.fillStyle(0xdddddd, 1);
+    rocket.fillRect(-10, -30, 20, 50);
+    // Nose
+    rocket.fillStyle(0xff4444, 1);
+    rocket.fillTriangle(-10, -30, 10, -30, 0, -55);
+    // Fins
+    rocket.fillStyle(0xaaaaaa, 1);
+    rocket.fillTriangle(-10, 20, -25, 35, -10, 5);
+    rocket.fillTriangle(10, 20, 25, 35, 10, 5);
+    // Window
+    rocket.fillStyle(0x66ccff, 1);
+    rocket.fillCircle(0, -10, 7);
+    rocket.setPosition(100, 250);
+    this.tweens.add({
+      targets: rocket,
+      x: W + 100,
+      y: 100,
+      duration: 7000,
+      repeat: -1,
+      delay: 1000
+    });
+
+    // Flame
+    const flame = this.add.graphics();
+    flame.fillStyle(0xff6600, 0.9);
+    flame.fillTriangle(-8, 0, 8, 0, 0, 25);
+    flame.fillStyle(0xffff00, 0.7);
+    flame.fillTriangle(-4, 0, 4, 0, 0, 15);
+    flame.setPosition(100, 280);
+    this.tweens.add({ targets: flame, x: W + 100, y: 127, duration: 7000, repeat: -1, delay: 1000 });
+    this.tweens.add({ targets: flame, scaleY: { from: 0.8, to: 1.2 }, duration: 100, yoyo: true, repeat: -1 });
+
+    // Shooting stars
+    for (let i = 0; i < 3; i++) {
+      const ss = this.add.graphics();
+      ss.fillStyle(0xffffff, 1);
+      ss.fillRect(0, 0, 60, 2);
+      ss.setPosition(Phaser.Math.Between(0, W), Phaser.Math.Between(0, H));
+      this.tweens.add({
+        targets: ss,
+        x: '+=' + 300, y: '+=' + 150,
+        alpha: { from: 1, to: 0 },
+        duration: 1000,
+        repeat: -1,
+        delay: i * 2500 + Math.random() * 1000,
+        onRepeat: (t) => {
+          ss.x = Phaser.Math.Between(-100, W);
+          ss.y = Phaser.Math.Between(-50, 200);
+          ss.alpha = 1;
+        }
+      });
+    }
+
+    // Title
+    this.add.text(W / 2, 25, '🚀 DEEP SPACE', {
+      fontSize: '30px', fontFamily: 'Georgia, serif',
+      fill: '#aaddff', stroke: '#002255', strokeThickness: 4
+    }).setOrigin(0.5);
+
+    this.add.text(W / 2, 460, 'Sailing through the cosmos, past planets and stars...', {
+      fontSize: '15px', fontFamily: 'Georgia, serif', fill: '#8899cc'
+    }).setOrigin(0.5);
+
+    const prompt = this.add.text(W / 2, 480, 'PRESS SPACE FOR NEXT SCENE', {
+      fontSize: '14px', fontFamily: 'Courier New', fill: '#aaddff'
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.2 }, duration: 700, yoyo: true, repeat: -1 });
+
+    this.add.text(10, 10, 'SCENE 4 / 5', { fontSize: '13px', fontFamily: 'Courier New', fill: '#556688' });
+
+    this.input.keyboard.once('keydown-SPACE', () => {
+      this.cameras.main.fade(600, 0, 0, 0);
+      this.time.delayedCall(600, () => this.scene.start('CityScene'));
+    });
+    this.cameras.main.fadeIn(800, 0, 0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE 5 — NIGHT CITY
+// ═══════════════════════════════════════════════════════
+class CityScene extends Phaser.Scene {
+  constructor() { super({ key: 'CityScene' }); }
+
+  create() {
+    const W = 800, H = 500;
+
+    // Night sky
+    const sky = this.add.graphics();
+    sky.fillGradientStyle(0x000022, 0x000022, 0x0a0a3a, 0x1a0a2e, 1);
+    sky.fillRect(0, 0, W, H);
+
+    // Moon
+    const moon = this.add.circle(120, 80, 45, 0xfffde7, 1);
+    this.add.circle(120, 80, 60, 0xfffde7, 0.1);
+    this.add.circle(120, 80, 80, 0xfffde7, 0.05);
+    // Moon craters
+    const moonCraters = this.add.graphics();
+    moonCraters.fillStyle(0xeeecc0, 0.5);
+    moonCraters.fillCircle(108, 75, 8);
+    moonCraters.fillCircle(130, 88, 5);
+    moonCraters.fillCircle(115, 95, 6);
+
+    // Stars
+    for (let i = 0; i < 150; i++) {
+      const s = this.add.circle(
+        Phaser.Math.Between(0, W),
+        Phaser.Math.Between(0, 200),
+        0.5 + Math.random(), 0xffffff, 0.4 + Math.random() * 0.6
+      );
+      this.tweens.add({ targets: s, alpha: { from: 0.2, to: 1 }, duration: 1000 + Math.random() * 2000, yoyo: true, repeat: -1, delay: Math.random() * 2000 });
+    }
+
+    // Buildings (back layer — dark)
+    const buildingData = [
+      [0,   280, 80,  220], [70,  300, 60,  200], [120, 260, 100, 240],
+      [210, 290, 70,  210], [270, 250, 90,  250], [350, 270, 80,  230],
+      [420, 240, 110, 260], [520, 280, 70,  220], [580, 255, 95,  245],
+      [665, 275, 80,  225], [735, 260, 65,  240]
+    ];
+
+    // Back buildings
+    buildingData.forEach(([x, y, w, h]) => {
+      const g = this.add.graphics();
+      g.fillStyle(0x0a0a1e, 1);
+      g.fillRect(x, y, w, h);
+      g.fillStyle(0x111133, 1);
+      g.fillRect(x, y, w, 4);
+      // Windows
+      for (let row = 0; row < Math.floor(h / 20); row++) {
+        for (let col = 0; col < Math.floor(w / 18); col++) {
+          if (Math.random() > 0.35) {
+            const lit = Math.random() > 0.3;
+            const colors = [0xffee88, 0xffffff, 0x88ccff, 0xff8833];
+            const wc = lit ? colors[Math.floor(Math.random() * colors.length)] : 0x111133;
+            const wa = lit ? 0.8 + Math.random() * 0.2 : 0.3;
+            g.fillStyle(wc, wa);
+            g.fillRect(x + col * 18 + 4, y + row * 20 + 6, 8, 10);
+            if (lit && Math.random() > 0.7) {
+              this.tweens.add({
+                targets: { alpha: 1 },
+                alpha: 0,
+                duration: 2000 + Math.random() * 3000,
+                yoyo: true,
+                repeat: -1,
+                delay: Math.random() * 4000,
+                onUpdate: (t, target) => {
+                  g.fillStyle(wc, target.alpha * wa);
+                  g.fillRect(x + col * 18 + 4, y + row * 20 + 6, 8, 10);
+                }
+              });
+            }
+          }
+        }
+      }
+    });
+
+    // Road / ground
+    const road = this.add.graphics();
+    road.fillStyle(0x111111, 1);
+    road.fillRect(0, 400, W, 100);
+    road.fillStyle(0x222222, 1);
+    road.fillRect(0, 400, W, 4);
+    // Road markings
+    road.fillStyle(0xffff00, 0.7);
+    for (let x = 0; x < W; x += 80) {
+      road.fillRect(x, 445, 40, 4);
+    }
+    // Pavement
+    road.fillStyle(0x1a1a2e, 1);
+    road.fillRect(0, 395, W, 10);
+
+    // Street lights
+    [150, 380, 620].forEach(x => {
+      const lamp = this.add.graphics();
+      lamp.fillStyle(0x888888, 1);
+      lamp.fillRect(x - 2, 340, 4, 60);
+      lamp.fillRect(x - 15, 337, 18, 4);
+      lamp.fillStyle(0xffee88, 1);
+      lamp.fillCircle(x - 6, 335, 6);
+      // Light cone
+      const cone = this.add.graphics();
+      cone.fillStyle(0xffee88, 0.06);
+      cone.fillTriangle(x - 6, 335, x - 60, 400, x + 50, 400);
+    });
+
+    // Cars
+    const carColors = [0xff3333, 0x3399ff, 0xffcc00, 0x33ff66, 0xffffff];
+    for (let i = 0; i < 4; i++) {
+      const cx = Phaser.Math.Between(-200, W);
+      const cc = carColors[i % carColors.length];
+      const car = this.add.graphics();
+      car.fillStyle(cc, 1);
+      car.fillRect(0, 0, 60, 22);
+      car.fillRect(10, -14, 38, 18);
+      car.fillStyle(0x88ccff, 0.8);
+      car.fillRect(14, -11, 14, 12);
+      car.fillRect(32, -11, 12, 12);
+      car.fillStyle(0x333333, 1);
+      car.fillCircle(10, 22, 7);
+      car.fillCircle(50, 22, 7);
+      // Headlights
+      car.fillStyle(0xffffcc, 0.9);
+      car.fillRect(56, 5, 6, 5);
+      car.setPosition(cx, 372 + i * 3);
+      const dir = i % 2 === 0 ? 1 : -1;
+      this.tweens.add({
+        targets: car,
+        x: dir > 0 ? W + 100 : -100,
+        duration: 5000 + i * 800,
+        repeat: -1,
+        delay: i * 1200,
+        onRepeat: () => { car.x = dir > 0 ? -100 : W + 100; }
+      });
+    }
+
+    // Neon signs
+    const signs = [
+      { x: 200, y: 270, text: 'OPEN', color: '#ff0066' },
+      { x: 450, y: 245, text: 'BAR', color: '#00ffcc' },
+      { x: 660, y: 260, text: 'HOTEL', color: '#ff9900' }
+    ];
+    signs.forEach(({ x, y, text, color }) => {
+      const t = this.add.text(x, y, text, {
+        fontSize: '14px', fontFamily: 'Courier New',
+        fill: color, stroke: color, strokeThickness: 1
+      });
+      this.tweens.add({ targets: t, alpha: { from: 1, to: 0.3 }, duration: 800 + Math.random() * 400, yoyo: true, repeat: -1 });
+    });
+
+    // Title
+    this.add.text(W / 2, 20, '🏙️ NEON CITY NIGHT', {
+      fontSize: '28px', fontFamily: 'Georgia, serif',
+      fill: '#ccaaff', stroke: '#330066', strokeThickness: 4
+    }).setOrigin(0.5);
+
+    this.add.text(W / 2, 460, 'The city never sleeps under a glowing moon...', {
+      fontSize: '15px', fontFamily: 'Georgia, serif', fill: '#9988cc'
+    }).setOrigin(0.5);
+
+    const prompt = this.add.text(W / 2, 480, 'PRESS SPACE TO START OVER', {
+      fontSize: '14px', fontFamily: 'Courier New', fill: '#ccaaff'
+    }).setOrigin(0.5);
+    this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.2 }, duration: 700, yoyo: true, repeat: -1 });
+
+    this.add.text(10, 10, 'SCENE 5 / 5', { fontSize: '13px', fontFamily: 'Courier New', fill: '#556688' });
+
+    this.input.keyboard.once('keydown-SPACE', () => {
+      this.cameras.main.fade(600, 0, 0, 0);
+      this.time.delayedCall(600, () => this.scene.start('TitleScene'));
+    });
+    this.cameras.main.fadeIn(800, 0, 0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PHASER GAME CONFIG
+// ═══════════════════════════════════════════════════════
+new Phaser.Game({
+  type: Phaser.AUTO,
+  width: 800,
+  height: 500,
+  backgroundColor: '#000000',
+  scene: [TitleScene, ForestScene, OceanScene, SpaceScene, CityScene]
+});
+</script>
+</body>
+</html>
